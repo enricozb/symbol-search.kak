@@ -70,6 +70,7 @@ impl Fzf {
         "--bind=tab:down,shift-tab:up",
       ])
       .stdin(Stdio::piped())
+      .stdout(Stdio::piped())
       .spawn()
       .context("spawn")?;
     let stdin = child.stdin.take().context("stdin")?;
@@ -105,7 +106,7 @@ impl Fzf {
 
         writeln!(
           stdin.lock(),
-          "{path}{SPACE}{line}{SPACE}{line_start}{SPACE}{column}{SPACE}{kind}{SPACE}{symbol}",
+          "{path}{SPACE}{line}{SPACE}{column}{SPACE}{line_start}{SPACE}{kind}{SPACE}{symbol}",
           path = entry.path.to_string_lossy(),
           line = entry.loc.line,
           column = entry.loc.column,
@@ -123,10 +124,10 @@ impl Fzf {
   pub fn wait(self) -> Result<String, anyhow::Error> {
     let output = self.child.wait_with_output().context("wait")?;
     let selection = String::from_utf8_lossy(&output.stdout)
-      .split('/')
+      .split(SPACE)
       .take(3)
       .collect::<Vec<_>>()
-      .join(":");
+      .join(" ");
 
     Ok(selection)
   }

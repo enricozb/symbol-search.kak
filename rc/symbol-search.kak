@@ -1,6 +1,6 @@
 # ────────────── commands ──────────────
 define-command -override symbol-search -docstring "search for symbols in files in the current working directory" %{
-  popup --title open --kak-script %{evaluate-commands "edit-and-goto %opt{popup_output}"} -- cargo run -r
+  popup --title 'symbol search' --kak-script %{evaluate-commands "edit-and-goto %opt{popup_output}"} -- cargo run -r
 }
 
 define-command -override edit-and-goto -hidden -params 3 -docstring "edit a file at a cursor position" %{

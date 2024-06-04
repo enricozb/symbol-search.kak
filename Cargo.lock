@@ -310,6 +310,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8478577c03552c21db0e2724ffb8986a5ce7af88107e6be5d2ee6e158c12800"
 
 [[package]]
+name = "kak-symbol-search"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "extend",
+ "futures",
+ "parking_lot",
+ "serde",
+ "tokio",
+ "tokio-stream",
+ "toml",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.155"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -512,21 +527,6 @@ name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
-
-[[package]]
-name = "symbol-search"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "extend",
- "futures",
- "parking_lot",
- "serde",
- "tokio",
- "tokio-stream",
- "toml",
-]
 
 [[package]]
 name = "syn"

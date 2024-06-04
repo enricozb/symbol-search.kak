@@ -66,7 +66,7 @@ impl Fzf {
         "--nth=2",
         "--with-nth=-2,-1",
         "--reverse",
-        "--preview=bat {1} --color always --plain --highlight-line {2} --line-range {4}:+100",
+        "--preview=bat {1} --color always --style=numbers,snip,header --highlight-line {2} --line-range {4}:+100",
         "--bind=tab:down,shift-tab:up",
       ])
       .stdin(Stdio::piped())
@@ -122,6 +122,9 @@ impl Fzf {
   }
 
   pub fn wait(self) -> Result<String, anyhow::Error> {
+    // drop so stdin is closed and fzf's spinner stops as soon as all ripgreps are done.
+    drop(self.stdin);
+
     let output = self.child.wait_with_output().context("wait")?;
     let selection = String::from_utf8_lossy(&output.stdout)
       .split(SPACE)

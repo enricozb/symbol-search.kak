@@ -1,9 +1,11 @@
 [package]
-name = "symbol-search"
+name = "kak-symbol-search"
+description = "kakoune symbol search"
+readme = "readme.md"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "CC0-1.0"
+repository = "https://github.com/enricozb/symbol-search.kak"
 
 [dependencies]
 anyhow = "1.0.86"

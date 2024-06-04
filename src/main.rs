@@ -12,14 +12,12 @@ use tokio::process::Command;
 
 use self::{config::Config, ext::*, fzf::Fzf, rg::Rg};
 
-const DEFAULT_CONFIG: &str = include_str!("../langs.toml");
-
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-  /// A configuration string. If omitted, the default configuration is used.
+  /// A configuration TOML string.
   #[arg(short, long)]
-  config: Option<String>,
+  config: String,
 }
 
 fn unique_extensions() -> Result<impl Stream<Item = String>, anyhow::Error> {
@@ -41,9 +39,7 @@ fn unique_extensions() -> Result<impl Stream<Item = String>, anyhow::Error> {
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
   let args = Args::parse();
-  let toml = args.config.as_deref().unwrap_or(DEFAULT_CONFIG);
-
-  let config: Config = toml::from_str(toml).context("parse config")?;
+  let config: Config = toml::from_str(&args.config).context("parse config")?;
 
   let fzf = Fzf::new().context("fzf")?;
 

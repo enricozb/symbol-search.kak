@@ -47,9 +47,9 @@ async fn main() -> Result<(), anyhow::Error> {
   futures::pin_mut!(extensions);
 
   while let Some(extension) = extensions.next().await {
-    for language in config.languages_with_extension(&extension) {
-      for symbol in language.symbols.values() {
-        fzf.insert_all(Rg::new(symbol.clone()).context("rg")?);
+    for (language, language_config) in config.languages_with_extension(&extension) {
+      for symbol in language_config.symbols.values() {
+        fzf.insert_all(Rg::new(language, symbol.clone()).context("rg")?);
       }
     }
   }

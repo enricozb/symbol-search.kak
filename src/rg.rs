@@ -13,9 +13,9 @@ pub struct Rg {
 }
 
 impl Rg {
-  pub fn new(symbol: Symbol) -> Result<Self, anyhow::Error> {
+  pub fn new(language: &str, symbol: Symbol) -> Result<Self, anyhow::Error> {
     let mut child = Command::new("rg")
-      .args(["--vimgrep", "--only-matching", "--replace", "$item"])
+      .args(["--vimgrep", "--type", language, "--only-matching", "--replace", "$item"])
       .arg(&symbol.regex)
       .stdout(Stdio::piped())
       .spawn()

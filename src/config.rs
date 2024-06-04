@@ -12,10 +12,10 @@ impl Config {
   pub fn languages_with_extension<'a, 'b: 'a>(
     &'a self,
     extension: &'b String,
-  ) -> impl Iterator<Item = &'a LanguageConfig> + 'a {
-    self.languages.values().filter_map(|l| {
-      if l.extensions.contains(extension) {
-        Some(l)
+  ) -> impl Iterator<Item = (&'a str, &'a LanguageConfig)> + 'a {
+    self.languages.iter().filter_map(|(language, config)| {
+      if config.extensions.contains(extension) {
+        Some((language.as_str(), config))
       } else {
         None
       }

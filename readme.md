@@ -23,15 +23,13 @@ for an example basic configuration.
 - [popup.kak][7]
 - [ripgrep][8]
 - [fd][9]
-- [jq][10]
 
 [1]: demo.gif
 [2]: #requirements
-[3]: https://crates.io/crates/kak-popup
+[3]: https://crates.io/crates/kak-symbol-search
 [4]: ./rc/symbol-search.kak
 [5]: https://toml.io/en/
 [6]: ./rc/symbol-search.kak
 [7]: https://github.com/enricozb/popup.kak
 [8]: https://github.com/BurntSushi/ripgrep
 [9]: https://github.com/sharkdp/fd
-[10]: https://github.com/jqlang/jq

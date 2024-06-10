@@ -38,11 +38,11 @@ extensions = ["py"]
 
 [python.symbols.class]
 type = 'class'
-regex = '^class\s+(?<item>[A-Za-z0-9_]+)'
+regex = '^\s*class\s+(?<item>[A-Za-z0-9_]+)'
 
 [python.symbols.def]
 type = 'function'
-regex = '^def\s+(?<item>[A-Za-z0-9_]+)'
+regex = '^\s*def\s+(?<item>[A-Za-z0-9_]+)'
 
 [python.symbols.global]
 type = 'global'

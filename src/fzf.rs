@@ -15,7 +15,7 @@ use parking_lot::Mutex;
 
 const SPACE: char = '\u{2008}';
 
-use crate::{ext::AsyncReadExt, rg::Rg};
+use crate::{config::Settings, ext::AsyncReadExt, rg::Rg};
 
 pub struct Fzf {
   child: Child,
@@ -58,7 +58,7 @@ impl Loc {
 }
 
 impl Fzf {
-  pub fn new() -> Result<Self, anyhow::Error> {
+  pub fn new(settings: &Settings) -> Result<Self, anyhow::Error> {
     let mut child = Command::new("fzf")
       .args([
         "--ansi",
@@ -69,6 +69,7 @@ impl Fzf {
         "--preview=bat {1} --color always --style=numbers,snip,header --highlight-line {2} --line-range {4}:+100",
         "--bind=tab:down,shift-tab:up",
       ])
+      .args([format!("--preview-window={}", settings.preview_window)])
       .stdin(Stdio::piped())
       .stdout(Stdio::piped())
       .spawn()

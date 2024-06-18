@@ -10,7 +10,12 @@ use clap::Parser;
 use futures::{Stream, StreamExt};
 use tokio::process::Command;
 
-use self::{config::Config, ext::*, fzf::Fzf, rg::Rg};
+use self::{
+  config::Config,
+  ext::{AsyncReadExt, UniqueExt},
+  fzf::Fzf,
+  rg::Rg,
+};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -41,7 +46,7 @@ async fn main() -> Result<(), anyhow::Error> {
   let args = Args::parse();
   let config: Config = toml::from_str(&args.config).context("parse config")?;
 
-  let fzf = Fzf::new().context("fzf")?;
+  let fzf = Fzf::new(&config.settings).context("fzf")?;
 
   let extensions = unique_extensions().context("extensions")?;
   futures::pin_mut!(extensions);

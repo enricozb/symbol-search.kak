@@ -10,10 +10,8 @@ repository = "https://github.com/enricozb/symbol-search.kak"
 [dependencies]
 anyhow = "1.0.86"
 clap = { version = "4.5.4", features = ["derive"] }
+crossbeam = "0.8.4"
 extend = "1.2.0"
-futures = "0.3.30"
 parking_lot = "0.12.3"
 serde = { version = "1.0.203", features = ["derive"] }
-tokio = { version = "1.38.0", features = ["full", "io-util"] }
-tokio-stream = { version = "0.1.15", features = ["io-util"] }
 toml = "0.8.13"

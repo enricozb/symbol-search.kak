@@ -1,62 +1,69 @@
 mod config;
 mod ext;
 mod fzf;
-mod rg;
+mod utils;
+mod worker;
 
-use std::{path::PathBuf, process::Stdio};
+use std::{
+  ffi::OsString,
+  io::{BufRead, BufReader},
+  os::unix::ffi::OsStringExt,
+  path::PathBuf,
+  process::{Command, Stdio},
+  thread::JoinHandle,
+};
 
 use anyhow::Context;
 use clap::Parser;
-use futures::{Stream, StreamExt};
-use tokio::process::Command;
+use crossbeam::channel::Receiver;
 
-use self::{
-  config::Config,
-  ext::{AsyncReadExt, UniqueExt},
-  fzf::Fzf,
-  rg::Rg,
-};
+use crate::{config::Config, ext::AnyExt, fzf::Fzf, worker::Worker};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Args {
   /// A configuration TOML string.
   #[arg(short, long)]
-  config: String,
+  config: Option<String>,
 }
 
-fn unique_extensions() -> Result<impl Stream<Item = String>, anyhow::Error> {
-  let mut child = Command::new("fd").stdout(Stdio::piped()).spawn().context("spawn")?;
+/// Spawns an `fd` process to list all files under a directory.
+fn files() -> Result<(Receiver<PathBuf>, JoinHandle<()>), anyhow::Error> {
+  let (send, recv) = crossbeam::channel::bounded(crate::utils::num_threads());
+
+  let mut child = Command::new("fd")
+    .args(["-t", "f", "-0"])
+    .stdout(Stdio::piped())
+    .spawn()
+    .context("spawn")?;
+
   let stdout = child.stdout.take().context("stdout")?;
 
-  Ok(
-    stdout
-      .lines_stream()
-      .filter_map(|path| async {
-        let path = PathBuf::from(path.ok()?);
+  let handle = std::thread::spawn(move || {
+    for line in BufReader::new(stdout).split(b'\0') {
+      let line = OsString::from_vec(line.expect("failed to get line"));
 
-        Some(path.extension()?.to_str()?.to_string())
-      })
-      .unique(),
-  )
+      send.send(PathBuf::from(line)).expect("failed to send");
+    }
+  });
+
+  Ok((recv, handle))
 }
 
-#[tokio::main]
-async fn main() -> Result<(), anyhow::Error> {
+fn main() -> Result<(), anyhow::Error> {
   let args = Args::parse();
-  let config: Config = toml::from_str(&args.config).context("parse config")?;
+  let config = args
+    .config
+    .as_deref()
+    .map_or(Config::default().ok(), toml::from_str)
+    .context("parse config")?;
 
-  let fzf = Fzf::new(&config.settings).context("fzf")?;
+  let fzf = Fzf::new(&config.fzf_settings).context("fzf")?;
 
-  let extensions = unique_extensions().context("extensions")?;
-  futures::pin_mut!(extensions);
+  let (files, files_handle) = files()?;
 
-  while let Some(extension) = extensions.next().await {
-    for (language, language_config) in config.languages_with_extension(&extension) {
-      for symbol in language_config.symbols.values() {
-        fzf.insert_all(Rg::new(language, symbol.clone()).context("rg")?);
-      }
-    }
+  for _ in 0..crate::utils::num_threads() {
+    Worker::new(&config, &files, &fzf).run();
   }
 
   let selection = fzf.wait().context("wait")?;

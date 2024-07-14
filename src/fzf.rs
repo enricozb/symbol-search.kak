@@ -1,49 +1,32 @@
 use std::{
-  collections::HashMap,
+  fmt::Display,
   io::Write,
   path::PathBuf,
   process::{Child, ChildStdin, Command, Stdio},
-  sync::{
-    atomic::{AtomicUsize, Ordering},
-    Arc,
-  },
+  sync::Arc,
 };
 
 use anyhow::Context;
-use futures::StreamExt;
 use parking_lot::Mutex;
 
 const SPACE: char = '\u{2008}';
 
-use crate::{config::Settings, ext::AsyncReadExt, rg::Rg};
+use crate::config::FzfSettings;
 
 pub struct Fzf {
   child: Child,
   stdin: Arc<Mutex<ChildStdin>>,
-
-  last_entry_id: Arc<AtomicUsize>,
-  entries: Arc<Mutex<HashMap<usize, Match>>>,
 }
 
-pub struct Match {
+pub struct Sink {
+  stdin: Arc<Mutex<ChildStdin>>,
+}
+
+pub struct Entry {
   path: PathBuf,
   loc: Loc,
   symbol: String,
-}
-
-impl Match {
-  pub fn parse(string: &str) -> Result<Self, anyhow::Error> {
-    let parts: Vec<_> = string.splitn(4, ':').collect();
-
-    // path:line:column:match
-    anyhow::ensure!(parts.len() == 4);
-
-    Ok(Self {
-      path: parts[0].into(),
-      loc: Loc::new(parts[1].parse()?, parts[2].parse()?),
-      symbol: parts[3].to_string(),
-    })
-  }
+  kind: SymbolKind,
 }
 
 pub struct Loc {
@@ -57,16 +40,25 @@ impl Loc {
   }
 }
 
+#[derive(Clone, Copy)]
+pub enum SymbolKind {
+  Class,
+  Function,
+  Global,
+}
+
 impl Fzf {
-  pub fn new(settings: &Settings) -> Result<Self, anyhow::Error> {
+  /// Spawns `fzf` process that expects stdin entries of the form
+  /// `<path> <line> <column> <symbol> <kind>` separated by [`SPACE`].
+  pub fn new(settings: &FzfSettings) -> Result<Fzf, anyhow::Error> {
     let mut child = Command::new("fzf")
       .args([
         "--ansi",
         "--delimiter=\u{2008}",
+        "--with-nth=-1,-2",
         "--nth=2",
-        "--with-nth=-2,-1",
         "--reverse",
-        "--preview=bat {1} --color always --style=numbers,snip,header --highlight-line {2} --line-range {4}:+100",
+        "--preview=bat {1} --color always --style=numbers,snip,header --highlight-line {2} --line-range {2}:+100",
         "--bind=tab:down,shift-tab:up",
       ])
       .args([format!("--preview-window={}", settings.preview_window)])
@@ -74,59 +66,25 @@ impl Fzf {
       .stdout(Stdio::piped())
       .spawn()
       .context("spawn")?;
+
     let stdin = child.stdin.take().context("stdin")?;
 
-    Ok(Self {
+    Ok(Fzf {
       child,
       stdin: Arc::new(Mutex::new(stdin)),
-      last_entry_id: Arc::default(),
-      entries: Arc::default(),
     })
   }
 
-  pub fn insert_all(&self, rg: Rg) {
-    let stdin = self.stdin.clone();
-    let last_entry_id = self.last_entry_id.clone();
-    let entries = self.entries.clone();
-
-    tokio::spawn(async move {
-      let lines = rg.stdout.lines_stream();
-      futures::pin_mut!(lines);
-
-      while let Some(line) = lines.next().await {
-        let Ok(line) = line else {
-          eprintln!("line not ok: {line:?}");
-          continue;
-        };
-        let Ok(entry) = Match::parse(&line) else {
-          eprintln!("match parse not ok");
-          continue;
-        };
-
-        let entry_id = last_entry_id.fetch_add(1, Ordering::Relaxed);
-
-        writeln!(
-          stdin.lock(),
-          "{path}{SPACE}{line}{SPACE}{column}{SPACE}{line_start}{SPACE}{kind}{SPACE}{symbol}",
-          path = entry.path.to_string_lossy(),
-          line = entry.loc.line,
-          column = entry.loc.column,
-          line_start = entry.loc.line.saturating_sub(3),
-          kind = rg.symbol.kind.short(),
-          symbol = entry.symbol
-        )
-        .expect("write");
-
-        entries.lock().insert(entry_id, entry);
-      }
-    });
+  pub fn sink(&self) -> Sink {
+    Sink::new(self.stdin.clone())
   }
 
   pub fn wait(self) -> Result<String, anyhow::Error> {
-    // drop so stdin is closed and fzf's spinner stops as soon as all ripgreps are done.
+    // when all references to `stdin` are dropped, the spinner will stop.
     drop(self.stdin);
 
     let output = self.child.wait_with_output().context("wait")?;
+
     let selection = String::from_utf8_lossy(&output.stdout)
       .split(SPACE)
       .take(3)
@@ -134,5 +92,42 @@ impl Fzf {
       .join(" ");
 
     Ok(selection)
+  }
+}
+
+impl Sink {
+  pub fn new(stdin: Arc<Mutex<ChildStdin>>) -> Self {
+    Self { stdin }
+  }
+
+  pub fn send(&self, entry: Entry) -> Result<(), std::io::Error> {
+    self.stdin.lock().write(format!("{entry}\n").as_bytes())?;
+
+    Ok(())
+  }
+}
+
+impl Display for Entry {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(
+      f,
+      "{path}{SPACE}{line}{SPACE}{column}{SPACE}{symbol}{SPACE}{kind}",
+      path = self.path.to_string_lossy(),
+      line = self.loc.line,
+      column = self.loc.column,
+      symbol = self.symbol,
+      kind = self.kind.short(),
+    )
+  }
+}
+
+impl SymbolKind {
+  pub fn short(self) -> &'static str {
+    // these strings must all have the same printable length
+    match self {
+      Self::Class => "\x1b[36m(cls)\x1b[0m",
+      Self::Function => "\x1b[35m(fun)\x1b[0m",
+      Self::Global => "\x1b[33m(gbl)\x1b[0m",
+    }
   }
 }

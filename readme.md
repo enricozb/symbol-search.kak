@@ -30,6 +30,9 @@ for an example basic configuration.
 
 ## TODO
 
+- [ ] change configuration keys to `SyntaxReference::name` and remove `extensions` field
+  - syntax references can be found by extension already, and return a syntax's name. this
+    name is what should be used to key into the configuration TOML.
 - [ ] vendor sublime syntax files
 - [ ] script to generate serialized `SyntaxSet`
 - [ ] `fzf` modes for searching specific symbol kinds

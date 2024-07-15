@@ -5,9 +5,9 @@
 
 Search symbols across various languages among files in your current working directory.
 
-![demo.gif][2]
+![demo.gif][1]
 
-Symbols are extracted using [syntect][1] which parses source code using Sublime Text
+Symbols are extracted using [syntect][2] which parses source code using Sublime Text
 syntax files.
 
 ## Installation
@@ -18,10 +18,10 @@ syntax files.
 
 ## Configuration
 
-Two things can be configured: the fzf appearance, and the list of symbols that are searchable.
-Configuration is done through a [TOML][6] string, on a per-language basis. Set the
-`symbol_search_config` kakoune option to your configuration. See [`symbol-search.kak`][7]
-or [`example-config.toml`][8] for an example basic configuration.
+Two things can be configured: `fzf`'s appearance, and the list of symbols that are searchable
+for each language. Configuration is done through a [TOML][6] string. Set `symbol_search_config`
+kakoune option to your configuration. See [`symbol-search.kak`][7] or [`example-config.toml`][8]
+for an example basic configuration.
 
 ## Requirements
 
@@ -29,12 +29,13 @@ or [`example-config.toml`][8] for an example basic configuration.
 - [fd][10]
 
 ## TODO
+
 - [ ] vendor sublime syntax files
 - [ ] script to generate serialized `SyntaxSet`
-- [ ] fzf modes for searching specific symbol kinds
+- [ ] `fzf` modes for searching specific symbol kinds
 
-[1]: https://github.com/trishume/syntect
-[2]: demo.gif
+[1]: demo.gif
+[2]: https://github.com/trishume/syntect
 [3]: #requirements
 [4]: https://crates.io/crates/kak-symbol-search
 [5]: ./rc/symbol-search.kak

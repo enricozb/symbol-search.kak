@@ -17,34 +17,27 @@ map global normal <c-r> ': symbol-search<ret>'
 
 # ────────────── configuration ──────────────
 declare-option str symbol_search_config %{
+[fzf_settings]
+preview_window = "70%"
+
 [rust]
 extensions = ["rs"]
-
-[rust.symbols.struct]
-type = 'class'
-regex = '^\s*(pub(\(([^)]+)\))?\s+)?(struct|enum)\s+(?<item>[A-Za-z0-9_]+)'
-
-[rust.symbols.fn]
-type = 'function'
-regex = '^\s*(pub(\(([^)]+)\))?\s+)?((const|async|unsafe|extern\s+r?"[^"]*")\s+)*fn\s+(?<item>[A-Za-z0-9_]+)'
-
-[rust.symbols.const]
-type = 'global'
-regex = '^\s*(pub(\(([^)]+)\))?\s+)?(const|static)\s+(mut\s+)?(?<item>[A-Za-z0-9_]+)'
-
+symbols = [
+  "entity.name.function.rust",
+  "entity.name.macro.rust",
+  "entity.name.struct.rust",
+  "entity.name.enum.rust",
+  "entity.name.module.rust",
+  "entity.name.type.rust",
+  "entity.name.trait.rust",
+  "entity.name.impl.rust",
+  "entity.name.constant.rust",
+]
 
 [python]
 extensions = ["py"]
-
-[python.symbols.class]
-type = 'class'
-regex = '^\s*class\s+(?<item>[A-Za-z0-9_]+)'
-
-[python.symbols.def]
-type = 'function'
-regex = '^\s*def\s+(?<item>[A-Za-z0-9_]+)'
-
-[python.symbols.global]
-type = 'global'
-regex = '^(?<item>[A-Za-z0-9_]+)\s+='
+symbols = [
+  "entity.name.class.python",
+  "entity.name.function.python",
+]
 }

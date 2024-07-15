@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use anyhow::Context;
-use syntect::parsing::{BasicScopeStackOp, ParseState, Scope, ScopeStack, ScopeStackOp, SyntaxReference};
+use syntect::parsing::{ParseState, Scope, ScopeStackOp, SyntaxReference};
 
 use crate::text::{Loc, Span};
 
@@ -30,7 +30,7 @@ impl<'a> Parser<'a> {
     let mut spans = Vec::new();
 
     for (column, scope_op) in scope_ops {
-      let loc = Loc::new(self.line, column);
+      let loc = Loc::new(self.line, column + 1);
 
       match scope_op {
         ScopeStackOp::Push(scope) => stack.push((loc, scope)),
@@ -42,7 +42,7 @@ impl<'a> Parser<'a> {
             };
 
             if self.scopes.contains(&scope) {
-              spans.push((Span::new(start, loc), scope, &line[start.column..loc.column]));
+              spans.push((Span::new(start, loc), scope, &line[start.column - 1..loc.column - 1]));
             }
           }
         }

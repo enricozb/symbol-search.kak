@@ -62,7 +62,7 @@ fn main() -> Result<(), anyhow::Error> {
 
   let fzf = Fzf::new(&config.fzf_settings).context("fzf")?;
 
-  let (files, files_handle) = files()?;
+  let (files, _) = files()?;
 
   for _ in 0..crate::utils::num_threads() {
     Worker::new(&config, &files, &fzf).run();

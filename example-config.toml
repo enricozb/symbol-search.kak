@@ -14,3 +14,10 @@ symbols = [
   "entity.name.impl.rust",
   "entity.name.constant.rust",
 ]
+
+[python]
+extensions = ["py"]
+symbols = [
+  "entity.name.class.python",
+  "entity.name.function.python",
+]

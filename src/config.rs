@@ -13,12 +13,14 @@ pub static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| {
   let mut builder = SyntaxSetBuilder::new();
 
   builder.add(SyntaxDefinition::load_from_str(RUST_SYNTAX, false, None).unwrap());
+  builder.add(SyntaxDefinition::load_from_str(PYTHON_SYNTAX, false, None).unwrap());
 
   builder.build()
 });
 
 static DEFAULT_CONFIG: &str = include_str!("../example-config.toml");
 static RUST_SYNTAX: &str = include_str!("../syntaxes/rust.sublime-syntax");
+static PYTHON_SYNTAX: &str = include_str!("../syntaxes/python.sublime-syntax");
 
 #[derive(Clone, Deserialize)]
 pub struct Config {
@@ -30,7 +32,8 @@ pub struct Config {
 
 impl Config {
   pub fn parser_for_file<P: AsRef<Path>>(&self, file: P) -> Option<Parser> {
-    let extension = file.as_ref().extension()?.to_str()?;
+    let file = file.as_ref();
+    let extension = file.extension()?.to_str()?;
     let language_config = self.languages.values().find(|l| l.extensions.contains(extension))?;
     let syntax_reference = SYNTAX_SET.find_syntax_by_extension(extension)?;
 

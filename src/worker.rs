@@ -11,6 +11,7 @@ use syntect::parsing::Scope;
 
 use crate::{
   config::Config,
+  ext::ResultExt,
   fzf::{Entry, Fzf, Sink, SymbolKind},
 };
 
@@ -53,7 +54,9 @@ impl Worker {
         while let Some(Ok(line)) = lines.next() {
           if let Ok(matches) = parser.parse_line(&line) {
             for (span, scope, symbol) in matches {
-              fzf.send(Entry::new(&path, span.start, symbol, scope_kinds.kind(scope)));
+              fzf
+                .send(&Entry::new(&path, span.start, symbol, scope_kinds.kind(scope)))
+                .warn();
             }
           }
         }
@@ -90,7 +93,6 @@ impl ScopeKinds {
 
         // "interface" => SymbolKind::Class,
         // "type" => SymbolKind::Class,
-
         _ => SymbolKind::Unknown,
       }
     })

@@ -1,6 +1,8 @@
 mod config;
 mod ext;
 mod fzf;
+mod parser;
+mod text;
 mod utils;
 mod worker;
 

@@ -11,5 +11,6 @@ symbols = [
   "entity.name.module.rust",
   "entity.name.type.rust",
   "entity.name.trait.rust",
+  "entity.name.impl.rust",
   "entity.name.constant.rust",
 ]

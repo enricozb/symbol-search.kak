@@ -1,7 +1,7 @@
 use std::{
   fmt::Display,
   io::Write,
-  path::PathBuf,
+  path::{Path, PathBuf},
   process::{Child, ChildStdin, Command, Stdio},
   sync::Arc,
 };
@@ -11,7 +11,7 @@ use parking_lot::Mutex;
 
 const SPACE: char = '\u{2008}';
 
-use crate::config::FzfSettings;
+use crate::{config::FzfSettings, text::Loc};
 
 pub struct Fzf {
   child: Child,
@@ -22,29 +22,30 @@ pub struct Sink {
   stdin: Arc<Mutex<ChildStdin>>,
 }
 
-pub struct Entry {
-  path: PathBuf,
+pub struct Entry<'a> {
+  path: &'a Path,
   loc: Loc,
-  symbol: String,
+  symbol: &'a str,
   kind: SymbolKind,
-}
-
-pub struct Loc {
-  line: usize,
-  column: usize,
-}
-
-impl Loc {
-  pub fn new(line: usize, column: usize) -> Self {
-    Self { line, column }
-  }
 }
 
 #[derive(Clone, Copy)]
 pub enum SymbolKind {
-  Class,
-  Function,
+  Module,
+  Macro,
   Global,
+  Constant,
+
+  Class,
+  Struct,
+  Enum,
+  Union,
+  Trait,
+
+  Function,
+  Impl,
+
+  Unknown,
 }
 
 impl Fzf {
@@ -54,9 +55,9 @@ impl Fzf {
     let mut child = Command::new("fzf")
       .args([
         "--ansi",
-        "--delimiter=\u{2008}",
-        "--with-nth=-1,-2",
-        "--nth=2",
+        &format!("--delimiter={SPACE}"),
+        "--nth=-1",
+        "--with-nth=5,4",
         "--reverse",
         "--preview=bat {1} --color always --style=numbers,snip,header --highlight-line {2} --line-range {2}:+100",
         "--bind=tab:down,shift-tab:up",
@@ -101,17 +102,28 @@ impl Sink {
   }
 
   pub fn send(&self, entry: Entry) -> Result<(), std::io::Error> {
-    self.stdin.lock().write(format!("{entry}\n").as_bytes())?;
+    self.stdin.lock().write_all(format!("{entry}\n").as_bytes())?;
 
     Ok(())
   }
 }
 
-impl Display for Entry {
+impl<'a> Entry<'a> {
+  pub fn new(path: &'a Path, loc: Loc, symbol: &'a str, kind: SymbolKind) -> Self {
+    Self {
+      path,
+      loc,
+      symbol,
+      kind,
+    }
+  }
+}
+
+impl<'a> Display for Entry<'a> {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     write!(
       f,
-      "{path}{SPACE}{line}{SPACE}{column}{SPACE}{symbol}{SPACE}{kind}",
+      "{path}{SPACE}{line}{SPACE}{column}{SPACE}{symbol}{SPACE}{kind}{SPACE}",
       path = self.path.to_string_lossy(),
       line = self.loc.line,
       column = self.loc.column,
@@ -125,9 +137,21 @@ impl SymbolKind {
   pub fn short(self) -> &'static str {
     // these strings must all have the same printable length
     match self {
-      Self::Class => "\x1b[36m(cls)\x1b[0m",
-      Self::Function => "\x1b[35m(fun)\x1b[0m",
+      Self::Module => "\x1b[33m(mod)\x1b[0m",
+      Self::Macro => "\x1b[33m(mcr)\x1b[0m",
       Self::Global => "\x1b[33m(gbl)\x1b[0m",
+      Self::Constant => "\x1b[33m(cst)\x1b[0m",
+
+      Self::Class => "\x1b[36m(cls)\x1b[0m",
+      Self::Struct => "\x1b[36m(str)\x1b[0m",
+      Self::Enum => "\x1b[36m(enu)\x1b[0m",
+      Self::Union => "\x1b[36m(uni)\x1b[0m",
+      Self::Trait => "\x1b[36m(tra)\x1b[0m",
+
+      Self::Function => "\x1b[35m(fun)\x1b[0m",
+      Self::Impl => "\x1b[35m(imp)\x1b[0m",
+
+      Self::Unknown => "\x1b[31m(???)\x1b[0m",
     }
   }
 }

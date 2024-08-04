@@ -36,6 +36,7 @@ for an example basic configuration.
 - [ ] vendor sublime syntax files
 - [ ] script to generate serialized `SyntaxSet`
 - [ ] `fzf` modes for searching specific symbol kinds
+- [ ] handle modified buffers
 
 [1]: demo.gif
 [2]: https://github.com/trishume/syntect

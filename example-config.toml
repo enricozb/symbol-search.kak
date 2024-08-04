@@ -21,3 +21,19 @@ symbols = [
   "entity.name.class.python",
   "entity.name.function.python",
 ]
+
+[typescript]
+extensions = ["ts"]
+symbols = [
+  "entity.name.type.interface.ts",
+  "entity.name.type.class.ts",
+  "entity.name.function.ts",
+]
+
+[typescript-react]
+extensions = ["tsx"]
+symbols = [
+  "entity.name.type.interface.tsx",
+  "entity.name.type.class.tsx",
+  "entity.name.function.tsx",
+]

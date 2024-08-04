@@ -5,22 +5,14 @@ use std::{
 
 use once_cell::sync::Lazy;
 use serde::Deserialize;
-use syntect::parsing::{Scope, SyntaxDefinition, SyntaxSet, SyntaxSetBuilder};
+use syntect::parsing::{Scope, SyntaxSet};
 
 use crate::parser::Parser;
 
-pub static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| {
-  let mut builder = SyntaxSetBuilder::new();
-
-  builder.add(SyntaxDefinition::load_from_str(RUST_SYNTAX, false, None).unwrap());
-  builder.add(SyntaxDefinition::load_from_str(PYTHON_SYNTAX, false, None).unwrap());
-
-  builder.build()
-});
+pub static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| syntect::dumps::from_binary(SYNTAX_SET_BIN));
 
 static DEFAULT_CONFIG: &str = include_str!("../example-config.toml");
-static RUST_SYNTAX: &str = include_str!("../syntaxes/rust.sublime-syntax");
-static PYTHON_SYNTAX: &str = include_str!("../syntaxes/python.sublime-syntax");
+static SYNTAX_SET_BIN: &[u8] = include_bytes!("../syntaxes/syntax-set.bin");
 
 #[derive(Clone, Deserialize)]
 pub struct Config {

@@ -1,5 +1,5 @@
 # ────────────── commands ──────────────
-define-command symbol-search -docstring "search for symbols in files in the current working directory" %{
+define-command -override symbol-search -docstring "search for symbols in files in the current working directory" %{
   popup \
     --title 'symbol search' \
     --kak-script %{evaluate-commands "edit-and-goto %opt{popup_output}"} -- \

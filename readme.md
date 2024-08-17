@@ -20,8 +20,8 @@ syntax files.
 
 Two things can be configured: `fzf`'s appearance, and the list of symbols that are searchable
 for each language. Configuration is done through a [TOML][6] string. Set `symbol_search_config`
-kakoune option to your configuration. See [`symbol-search.kak`][7] or [`example-config.toml`][8]
-for an example basic configuration.
+kakoune option to your configuration. See [`symbol-search.kak`][7] or [`default-config.toml`][8]
+for the default configuration.
 
 ## Requirements
 

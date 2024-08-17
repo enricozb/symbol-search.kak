@@ -3,7 +3,7 @@ preview_window = "70%"
 
 [rust]
 extensions = ["rs"]
-symbols = [
+include = [
   "entity.name.function.rust",
   "entity.name.macro.rust",
   "entity.name.struct.rust",
@@ -17,7 +17,17 @@ symbols = [
 
 [python]
 extensions = ["py"]
-symbols = [
+include = [
   "entity.name.class.python",
   "entity.name.function.python",
+]
+
+[go]
+extensions = ["go"]
+include = [
+  "entity.name.function.go",
+  "entity.name.type.go",
+
+  "variable.other.constant.declaration.go - meta.block.go",
+  "variable.other.readwrite.declaration.go - meta.block.go",
 ]

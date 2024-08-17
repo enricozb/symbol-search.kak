@@ -31,3 +31,25 @@ include = [
   "variable.other.constant.declaration.go - meta.block.go",
   "variable.other.readwrite.declaration.go - meta.block.go",
 ]
+
+[typescript]
+extensions = ["js", "jsx", "ts", "tsx"]
+include = [
+  "entity.name.type.class.tsx",
+  "entity.name.type.alias.tsx",
+  "entity.name.type.interface.tsx",
+  "entity.name.function.tsx",
+  "entity.name.constant.tsx",
+  "meta.definition.property.tsx",
+]
+exclude = [
+  "entity.name.type.module.tsx",
+  "entity.name.type.tsx",
+  "meta.block.tsx",
+  "meta.function-call.tsx",
+  "meta.import.tsx",
+  "meta.parameters.tsx",
+  "meta.return.type.tsx",
+  "meta.type.annotation.tsx",
+  "meta.type.parameters.tsx",
+]

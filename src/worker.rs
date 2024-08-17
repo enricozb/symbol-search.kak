@@ -87,9 +87,11 @@ impl ScopeKinds {
         "struct"    => SymbolKind::Struct,
         "enum"      => SymbolKind::Enum,
         "union"     => SymbolKind::Union,
+
+        "alias"     => SymbolKind::Alias,
+        "interface" => SymbolKind::Interface,
         "trait"     => SymbolKind::Trait,
         "type"      => SymbolKind::Type,
-        "interface" => SymbolKind::Interface,
 
         "function"  => SymbolKind::Function,
         "impl"      => SymbolKind::Impl,

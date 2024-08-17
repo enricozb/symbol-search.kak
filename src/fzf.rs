@@ -40,9 +40,11 @@ pub enum SymbolKind {
   Struct,
   Enum,
   Union,
+
+  Alias,
+  Interface,
   Trait,
   Type,
-  Interface,
 
   Function,
   Impl,
@@ -149,9 +151,11 @@ impl SymbolKind {
       Self::Struct    => "\x1b[36m(struct)\x1b[0m",
       Self::Enum      => "\x1b[36m(enum)  \x1b[0m",
       Self::Union     => "\x1b[36m(union) \x1b[0m",
-      Self::Trait     => "\x1b[36m(trait) \x1b[0m",
-      Self::Type      => "\x1b[36m(type)  \x1b[0m",
-      Self::Interface => "\x1b[36m(inter) \x1b[0m",
+
+      Self::Alias     => "\x1b[34m(alias) \x1b[0m",
+      Self::Interface => "\x1b[34m(inter) \x1b[0m",
+      Self::Trait     => "\x1b[34m(trait) \x1b[0m",
+      Self::Type      => "\x1b[34m(type)  \x1b[0m",
 
       Self::Function  => "\x1b[35m(func)  \x1b[0m",
       Self::Impl      => "\x1b[35m(impl)  \x1b[0m",

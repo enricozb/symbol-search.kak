@@ -53,7 +53,7 @@
 # lines, for example to trim whitespace and comments, may be unexpectedly
 # interrupted by sibling rules with $.
 
-name: Go
+name: go
 scope: source.go
 version: 2
 

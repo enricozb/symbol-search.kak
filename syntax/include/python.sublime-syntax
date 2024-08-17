@@ -1,6 +1,6 @@
 %YAML 1.2
 ---
-name: Python
+name: python
 scope: source.python
 version: 2
 

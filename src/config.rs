@@ -26,8 +26,12 @@ impl Config {
   pub fn parser_for_file<P: AsRef<Path>>(&self, file: P) -> Option<Parser> {
     let file = file.as_ref();
     let extension = file.extension()?.to_str()?;
-    let language_config = self.languages.values().find(|l| l.extensions.contains(extension))?;
-    let syntax_reference = SYNTAX_SET.find_syntax_by_extension(extension)?;
+    let (language, language_config) = self
+      .languages
+      .iter()
+      .find(|(_, config)| config.extensions.contains(extension))?;
+
+    let syntax_reference = SYNTAX_SET.find_syntax_by_name(language)?;
 
     Some(Parser::new(
       &language_config.include,

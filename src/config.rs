@@ -108,7 +108,7 @@ impl<'de> Deserialize<'de> for LanguageConfig {
 
     Ok(Self {
       extensions,
-      restrict: include.iter().flat_map(|expr| expr.exclude).clone().collect(),
+      restrict: include.iter().filter_map(|expr| expr.exclude).clone().collect(),
       include: include.into_iter().map(|expr| (expr.scope, expr.exclude)).collect(),
       exclude,
     })

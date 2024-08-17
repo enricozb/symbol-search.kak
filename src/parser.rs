@@ -95,14 +95,7 @@ impl<'a> Parser<'a> {
                 spans.push((Span::new(start, loc), scope, &line[start.column - 1..loc.column - 1]));
               }
 
-              Some(Some(restrict))
-                if self
-                  .restricted_scope_counters
-                  .get(restrict)
-                  .cloned()
-                  .unwrap_or_default()
-                  == 0 =>
-              {
+              Some(Some(restrict)) if *self.restricted_scope_counters.get(restrict).unwrap_or(&0) == 0 => {
                 spans.push((Span::new(start, loc), scope, &line[start.column - 1..loc.column - 1]));
               }
 

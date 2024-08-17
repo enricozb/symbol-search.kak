@@ -70,6 +70,7 @@ impl ScopeKinds {
     Self { cache: HashMap::new() }
   }
 
+  #[rustfmt::skip]
   fn kind(&mut self, scope: Scope) -> SymbolKind {
     *self.cache.entry(scope).or_insert_with_key(|scope| {
       let scope = scope.to_string();
@@ -78,21 +79,22 @@ impl ScopeKinds {
       };
 
       match name {
-        "module" => SymbolKind::Module,
-        "macro" => SymbolKind::Macro,
-        "constant" => SymbolKind::Constant,
+        "module"    => SymbolKind::Module,
+        "macro"     => SymbolKind::Macro,
+        "constant"  => SymbolKind::Constant,
 
-        "class" => SymbolKind::Class,
-        "struct" => SymbolKind::Struct,
-        "enum" => SymbolKind::Enum,
-        "union" => SymbolKind::Union,
-        "trait" => SymbolKind::Trait,
+        "class"     => SymbolKind::Class,
+        "struct"    => SymbolKind::Struct,
+        "enum"      => SymbolKind::Enum,
+        "union"     => SymbolKind::Union,
+        "trait"     => SymbolKind::Trait,
+        "type"      => SymbolKind::Type,
+        "interface" => SymbolKind::Interface,
 
-        "function" => SymbolKind::Function,
-        "impl" => SymbolKind::Impl,
+        "function"  => SymbolKind::Function,
+        "impl"      => SymbolKind::Impl,
 
         // "interface" => SymbolKind::Class,
-        // "type" => SymbolKind::Class,
         _ => SymbolKind::Unknown,
       }
     })

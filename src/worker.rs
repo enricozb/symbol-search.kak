@@ -4,15 +4,16 @@ use std::{
   io::{BufRead, BufReader},
   path::PathBuf,
   thread::JoinHandle,
+  time::SystemTime,
 };
 
+use anyhow::Context;
 use crossbeam::channel::Receiver;
 use syntect::parsing::Scope;
 
 use crate::{
   cache::Cache,
   config::Config,
-  ext::ResultExt,
   fzf::{Entry, Fzf, Sink, SymbolKind},
 };
 
@@ -34,64 +35,68 @@ impl Worker {
   }
 
   pub fn run(self) -> JoinHandle<()> {
-    let Self {
-      config,
-      cache,
-      files,
-      fzf,
-    } = self;
-
-    let mut scope_kinds = ScopeKinds::new();
-
-    // TODO(enricozb):
-    // - shorten this spawn call / extract into a function
-    // - have the new function return an error (remove expect / unwrap)
-    // - catch and eprint it here
     std::thread::spawn(move || {
-      while let Ok(path) = files.recv() {
-        let path_modified = std::fs::metadata(&path)
-          .expect("metadata")
-          .modified()
-          .expect("modified");
+      let mut scope_kinds = ScopeKinds::new();
 
-        if let Some(file_info) = cache.file_info(&path) {
-          // if the cached file and the current file have the same modified timestamp,
-          // use the entries from the cache.
-          if path_modified == file_info.modified {
-            for Entry { loc, symbol, kind, .. } in &file_info.entries {
-              // cached entries don't contain paths so they are re-inserted here.
-              fzf.send(&Entry::new(&path, *loc, symbol, *kind)).warn();
-            }
+      while let Ok(path) = self.files.recv() {
+        let modified = std::fs::metadata(&path).expect("metadata").modified().expect("modified");
 
-            continue;
-          }
+        if self.use_cached_entries(&path, modified).expect("cached") {
+          continue;
         }
 
-        cache.new_file_info(path.clone(), path_modified);
-
-        let Some(mut parser) = config.parser_for_file(&path) else {
-          continue;
-        };
-
-        let Ok(file) = File::open(&path) else {
-          continue;
-        };
-
-        let mut lines = BufReader::new(file).lines();
-
-        while let Some(Ok(line)) = lines.next() {
-          if let Ok(matches) = parser.parse_line(&line) {
-            for (span, scope, symbol) in matches {
-              let entry = Entry::new(&path, span.start, symbol, scope_kinds.kind(scope));
-
-              fzf.send(&entry).warn();
-
-              cache.insert_entry(&path, entry);
-            }
-          }
-        }
+        self.parse_file(&path, modified, &mut scope_kinds).expect("parse file");
       }
     })
+  }
+
+  /// Attempts to use the cache to compute a paths entries.
+  ///
+  /// Returns true if the cache's entries were used.
+  fn use_cached_entries(&self, path: &PathBuf, modified: SystemTime) -> Result<bool, anyhow::Error> {
+    if let Some(file_info) = self.cache.file_info(path) {
+      // if the cached file and the current file have the same modified timestamp,
+      // use the entries from the cache.
+      if modified == file_info.modified {
+        for Entry { loc, symbol, kind, .. } in &file_info.entries {
+          // cached entries don't contain paths so they are re-inserted here.
+          self.fzf.send(&Entry::new(&path, *loc, symbol, *kind)).context("send")?;
+        }
+
+        return Ok(true);
+      }
+    }
+
+    Ok(false)
+  }
+
+  /// Parses a file and inserts its entries into the cache.
+  fn parse_file(&self, path: &PathBuf, modified: SystemTime, scope_kinds: &mut ScopeKinds) -> Result<(), anyhow::Error> {
+    self.cache.new_file_info(path.clone(), modified);
+
+    let Some(mut parser) = self.config.parser_for_file(path) else {
+      return Ok(());
+    };
+
+    let Ok(file) = File::open(path) else {
+      return Ok(());
+    };
+
+    let mut lines = BufReader::new(file).lines();
+
+    while let Some(Ok(line)) = lines.next() {
+      if let Ok(matches) = parser.parse_line(&line) {
+        for (span, scope, symbol) in matches {
+          let entry = Entry::new(path, span.start, symbol, scope_kinds.kind(scope));
+
+          self.fzf.send(&entry).context("send")?;
+
+          self.cache.insert_entry(path, entry);
+        }
+      }
+    }
+
+    Ok(())
   }
 }
 

@@ -41,15 +41,15 @@ impl Cache {
       std::fs::create_dir_all(path.parent().context("parent")?).context("create dir")?;
 
       return Ok(Self {
-        path: Some(path.to_path_buf()),
-        files: Default::default(),
+        path: Some(path.clone()),
+        files: Arc::default(),
       });
     }
 
     let file = File::open(&path).context("open")?;
 
     Ok(Self {
-      path: Some(path.to_path_buf()),
+      path: Some(path.clone()),
       files: Arc::new(RwLock::new(serde_json::from_reader(file).context("from_reader")?)),
     })
   }

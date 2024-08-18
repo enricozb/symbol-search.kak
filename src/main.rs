@@ -1,25 +1,18 @@
 mod config;
 mod ext;
+mod fd;
 mod fzf;
 mod parser;
 mod text;
 mod utils;
 mod worker;
 
-use std::{
-  ffi::OsString,
-  io::{BufRead, BufReader},
-  os::unix::ffi::OsStringExt,
-  path::PathBuf,
-  process::{Command, Stdio},
-  thread::JoinHandle,
-};
+use std::path::PathBuf;
 
 use anyhow::Context;
 use clap::Parser;
-use crossbeam::channel::Receiver;
 
-use crate::{config::Config, ext::AnyExt, fzf::Fzf, worker::Worker};
+use crate::{config::Config, fd::Fd, fzf::Fzf, worker::Worker};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -27,49 +20,35 @@ struct Args {
   /// A configuration TOML string.
   #[arg(short, long)]
   config: Option<String>,
-}
-
-/// Spawns an `fd` process to list all files under a directory.
-fn files() -> Result<(Receiver<PathBuf>, JoinHandle<()>), anyhow::Error> {
-  let (send, recv) = crossbeam::channel::bounded(crate::utils::num_threads());
-
-  let mut child = Command::new("fd")
-    .args(["-t", "f", "-0"])
-    .stdout(Stdio::piped())
-    .spawn()
-    .context("spawn")?;
-
-  let stdout = child.stdout.take().context("stdout")?;
-
-  let handle = std::thread::spawn(move || {
-    for line in BufReader::new(stdout).split(b'\0') {
-      let line = OsString::from_vec(line.expect("failed to get line"));
-
-      send.send(PathBuf::from(line)).expect("failed to send");
-    }
-  });
-
-  Ok((recv, handle))
+  /// Directory to cache parsed symbols.
+  ///
+  /// Files are reparsed if their cached mtime differs from than their current mtime.
+  /// The cache is only usable if the previously generated relative paths are still valid.
+  /// This would normally only be the case when the binary is called from the same
+  /// directory multiple times.
+  ///
+  /// This directory is created if it does not exist.
+  #[arg(short, long)]
+  cache: Option<PathBuf>,
 }
 
 fn main() -> Result<(), anyhow::Error> {
   let args = Args::parse();
-  let config = args
-    .config
-    .as_deref()
-    .map_or(Config::default().ok(), toml::from_str)
-    .context("parse config")?;
+
+  let config = if let Some(config) = args.config {
+    toml::from_str(&config)?
+  } else {
+    Config::default()
+  };
 
   let fzf = Fzf::new(&config.fzf_settings).context("fzf")?;
-
-  let (files, _) = files()?;
+  let fd = Fd::new(config.extensions()).context("fd")?;
 
   for _ in 0..crate::utils::num_threads() {
-    Worker::new(&config, &files, &fzf).run();
+    Worker::new(&config, fd.files(), &fzf).run();
   }
 
   let selection = fzf.wait().context("wait")?;
-
   println!("{selection}");
 
   Ok(())

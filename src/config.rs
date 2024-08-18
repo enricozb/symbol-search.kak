@@ -40,6 +40,10 @@ impl Config {
       syntax_reference,
     ))
   }
+
+  pub fn extensions(&self) -> impl Iterator<Item = &String> {
+    self.languages.values().flat_map(|language| &language.extensions)
+  }
 }
 
 impl Default for Config {

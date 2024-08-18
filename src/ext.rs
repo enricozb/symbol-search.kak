@@ -20,10 +20,3 @@ pub impl<T, E: Debug> Result<T, E> {
     }
   }
 }
-
-#[extend::ext(name=AnyExt)]
-pub impl<T> T {
-  fn ok<E>(self) -> Result<T, E> {
-    Ok(self)
-  }
-}

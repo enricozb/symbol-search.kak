@@ -30,12 +30,12 @@ for the default configuration.
 
 ## TODO
 
-- [ ] change configuration keys to `SyntaxReference::name` and remove `extensions` field
-  - syntax references can be found by extension already, and return a syntax's name. this
-    name is what should be used to key into the configuration TOML.
-- [ ] vendor sublime syntax files
-- [ ] script to generate serialized `SyntaxSet`
 - [ ] `fzf` modes for searching specific symbol kinds
+- [ ] buffer symbol search (similar to sublime's non-indexed symbol search)
+- [ ] include parent scope(s) in symbols
+  - a `method` under `impl Trait for X` should appear as `<X as Trait>::method`
+- [ ] cache symbols
+  - for large repositories rerunning the symbol parsing and search is expensive
 
 [1]: demo.gif
 [2]: https://github.com/trishume/syntect

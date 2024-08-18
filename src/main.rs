@@ -1,3 +1,4 @@
+mod cache;
 mod config;
 mod ext;
 mod fd;
@@ -12,7 +13,7 @@ use std::path::PathBuf;
 use anyhow::Context;
 use clap::Parser;
 
-use crate::{config::Config, fd::Fd, fzf::Fzf, worker::Worker};
+use crate::{cache::Cache, config::Config, fd::Fd, fzf::Fzf, worker::Worker};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -29,24 +30,44 @@ struct Args {
   ///
   /// This directory is created if it does not exist.
   #[arg(short, long)]
-  cache: Option<PathBuf>,
+  cache_dir: Option<PathBuf>,
+}
+
+impl Args {
+  /// Returns the parsed provided config or the default one.
+  pub fn config(&self) -> Result<Config, anyhow::Error> {
+    if let Some(config) = &self.config {
+      toml::from_str(config).context("from_str")
+    } else {
+      Ok(Config::default())
+    }
+  }
+
+  /// Returns the provided cache or an empty one.
+  pub fn cache(&self) -> Result<Cache, anyhow::Error> {
+    if let Some(cache_dir) = &self.cache_dir {
+      Cache::from_dir(cache_dir).context("from_str")
+    } else {
+      Ok(Cache::default())
+    }
+  }
 }
 
 fn main() -> Result<(), anyhow::Error> {
   let args = Args::parse();
 
-  let config = if let Some(config) = args.config {
-    toml::from_str(&config)?
-  } else {
-    Config::default()
-  };
+  let config = args.config().context("config")?;
+  let cache = args.cache().context("cache")?;
 
   let fzf = Fzf::new(&config.fzf_settings).context("fzf")?;
   let fd = Fd::new(config.extensions()).context("fd")?;
 
   for _ in 0..crate::utils::num_threads() {
-    Worker::new(&config, fd.files(), &fzf).run();
+    Worker::new(&config, &cache, fd.files(), &fzf).run();
   }
+
+  // the cache is saved on drop
+  drop(cache);
 
   let selection = fzf.wait().context("wait")?;
   println!("{selection}");

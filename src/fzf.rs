@@ -8,6 +8,7 @@ use std::{
 
 use anyhow::Context;
 use parking_lot::Mutex;
+use serde::{Deserialize, Serialize};
 
 const SPACE: char = '\u{2008}';
 
@@ -22,14 +23,15 @@ pub struct Sink {
   stdin: Arc<Mutex<ChildStdin>>,
 }
 
-pub struct Entry<'a> {
-  path: &'a Path,
-  loc: Loc,
-  symbol: &'a str,
-  kind: SymbolKind,
+#[derive(Serialize, Deserialize)]
+pub struct Entry<P, S> {
+  pub path: P,
+  pub loc: Loc,
+  pub symbol: S,
+  pub kind: SymbolKind,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum SymbolKind {
   Module,
   Macro,
@@ -105,15 +107,15 @@ impl Sink {
     Self { stdin }
   }
 
-  pub fn send(&self, entry: &Entry) -> Result<(), std::io::Error> {
+  pub fn send<P: AsRef<Path>, S: Display>(&self, entry: &Entry<P, S>) -> Result<(), std::io::Error> {
     self.stdin.lock().write_all(format!("{entry}\n").as_bytes())?;
 
     Ok(())
   }
 }
 
-impl<'a> Entry<'a> {
-  pub fn new(path: &'a Path, loc: Loc, symbol: &'a str, kind: SymbolKind) -> Self {
+impl<P, S> Entry<P, S> {
+  pub fn new(path: P, loc: Loc, symbol: S, kind: SymbolKind) -> Self {
     Self {
       path,
       loc,
@@ -123,12 +125,12 @@ impl<'a> Entry<'a> {
   }
 }
 
-impl<'a> Display for Entry<'a> {
+impl<P: AsRef<Path>, S: Display> Display for Entry<P, S> {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     write!(
       f,
       "{path}{SPACE}{line}{SPACE}{column}{SPACE}{symbol}{SPACE}{kind}{SPACE}",
-      path = self.path.to_string_lossy(),
+      path = self.path.as_ref().to_string_lossy(),
       line = self.loc.line,
       column = self.loc.column,
       symbol = self.symbol,

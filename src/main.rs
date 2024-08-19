@@ -19,6 +19,9 @@ use crate::{cache::Cache, config::Config, fd::Fd, fzf::Fzf, worker::Worker};
 #[command(author, version, about, long_about = None)]
 struct Args {
   /// A configuration TOML string.
+  ///
+  /// The default configuration will be applied if this argument is not provided
+  /// or if it is set to the empty string.
   #[arg(short, long)]
   config: Option<String>,
   /// Directory to cache parsed symbols.
@@ -37,10 +40,12 @@ impl Args {
   /// Returns the parsed provided config or the default one.
   pub fn config(&self) -> Result<Config, anyhow::Error> {
     if let Some(config) = &self.config {
-      toml::from_str(config).context("from_str")
-    } else {
-      Ok(Config::default())
+      if !config.is_empty() {
+        return toml::from_str(config).context("from_str");
+      }
     }
+
+    Ok(Config::default())
   }
 
   /// Returns the provided cache or an empty one.

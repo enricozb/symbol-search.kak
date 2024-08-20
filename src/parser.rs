@@ -80,31 +80,12 @@ impl<'a> Parser<'a> {
             self.excluded_scope_count += 1;
           }
 
-          eprintln!(
-            "PUSH   {scope: <48} len={len}",
-            scope = format!("{scope:?}"),
-            len = self.stack.len()
-          );
-
           self.stack.push((loc, scope));
         }
 
         ScopeStackOp::Pop(n) => {
           for _ in 0..n {
             let (start, scope) = self.stack.pop().context("pop")?;
-
-            let text = if start.line == loc.line {
-              &line[start.column - 1..loc.column - 1]
-            } else {
-              "cross-line scope"
-            };
-
-            eprintln!(
-              "POPPED {scope: <48} len={len} exc={exc} {text:?}",
-              scope = format!("{scope:?}"),
-              exc = self.excluded_scope_count,
-              len = self.stack.len(),
-            );
 
             if self.restrict.contains(&scope) {
               *self.restricted_scope_counters.get_mut(&scope).unwrap() -= 1;
@@ -138,7 +119,7 @@ impl<'a> Parser<'a> {
           }
         }
 
-        stack_op => eprintln!("unknown stack op {stack_op:?}"),
+        _ => (),
       };
     }
 

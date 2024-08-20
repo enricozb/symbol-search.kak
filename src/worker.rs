@@ -85,9 +85,9 @@ impl Worker {
     let mut lines = BufReader::new(file).lines();
 
     while let Some(Ok(line)) = lines.next() {
-      if let Ok(matches) = parser.parse_line(&line) {
-        for (span, scope, symbol) in matches {
-          let entry = Entry::new(path, span.start, symbol, scope_kinds.kind(scope));
+      if let Ok(symbols) = parser.parse_line(&line) {
+        for symbol in symbols {
+          let entry = Entry::new(path, symbol.span.start, symbol.text, scope_kinds.kind(symbol.scope));
 
           self.fzf.send(&entry).context("send")?;
 

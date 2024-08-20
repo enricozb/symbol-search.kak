@@ -7,6 +7,18 @@ use syntect::parsing::{ParseState, Scope, ScopeStackOp, SyntaxReference};
 
 use crate::text::{Loc, Span};
 
+pub struct Symbol<'a> {
+  pub span: Span,
+  pub scope: Scope,
+  pub text: &'a str,
+}
+
+impl<'a> Symbol<'a> {
+  pub fn new(span: Span, scope: Scope, text: &'a str) -> Self {
+    Self { span, scope, text }
+  }
+}
+
 pub struct Parser<'a> {
   /// Scopes to search for, mapping to optional scope-level exclusions. See [`ScopeExpr`].
   include: &'a HashMap<Scope, Option<Scope>>,
@@ -23,6 +35,8 @@ pub struct Parser<'a> {
   excluded_scope_count: usize,
   /// The current line, 0 before any line is parsed.
   line: usize,
+  /// The current stack of scopes, and their starting positions.
+  stack: Vec<(Loc, Scope)>,
   /// The syntect parser's internal state.
   state: ParseState,
 }
@@ -41,20 +55,17 @@ impl<'a> Parser<'a> {
       restricted_scope_counters: HashMap::new(),
       excluded_scope_count: 0,
       line: 0,
+      stack: Vec::new(),
       state: ParseState::new(syntax),
     }
   }
 
-  pub fn parse_line<'b>(&mut self, line: &'b str) -> Result<Vec<(Span, Scope, &'b str)>, anyhow::Error> {
+  pub fn parse_line<'b>(&mut self, line: &'b str) -> Result<Vec<Symbol<'b>>, anyhow::Error> {
     self.line += 1;
 
-    let scope_ops = self
-      .state
-      .parse_line(line, &crate::config::SYNTAX_SET)
-      .context("parse_line")?;
+    let scope_ops = self.state.parse_line(line, &crate::config::SYNTAX_SET).context("parse_line")?;
 
-    let mut stack = Vec::new();
-    let mut spans = Vec::new();
+    let mut symbols: Vec<Symbol> = Vec::new();
 
     for (column, scope_op) in scope_ops {
       let loc = Loc::new(self.line, column + 1);
@@ -69,14 +80,31 @@ impl<'a> Parser<'a> {
             self.excluded_scope_count += 1;
           }
 
-          stack.push((loc, scope));
+          eprintln!(
+            "PUSH   {scope: <48} len={len}",
+            scope = format!("{scope:?}"),
+            len = self.stack.len()
+          );
+
+          self.stack.push((loc, scope));
         }
 
         ScopeStackOp::Pop(n) => {
           for _ in 0..n {
-            let Some((start, scope)) = stack.pop() else {
-              continue;
+            let (start, scope) = self.stack.pop().context("pop")?;
+
+            let text = if start.line == loc.line {
+              &line[start.column - 1..loc.column - 1]
+            } else {
+              "cross-line scope"
             };
+
+            eprintln!(
+              "POPPED {scope: <48} len={len} exc={exc} {text:?}",
+              scope = format!("{scope:?}"),
+              exc = self.excluded_scope_count,
+              len = self.stack.len(),
+            );
 
             if self.restrict.contains(&scope) {
               *self.restricted_scope_counters.get_mut(&scope).unwrap() -= 1;
@@ -90,24 +118,30 @@ impl<'a> Parser<'a> {
               continue;
             }
 
-            match self.include.get(&scope) {
-              Some(None) => {
-                spans.push((Span::new(start, loc), scope, &line[start.column - 1..loc.column - 1]));
-              }
+            let Some(restrict) = self.include.get(&scope) else {
+              continue;
+            };
 
-              Some(Some(restrict)) if *self.restricted_scope_counters.get(restrict).unwrap_or(&0) == 0 => {
-                spans.push((Span::new(start, loc), scope, &line[start.column - 1..loc.column - 1]));
-              }
+            match restrict {
+              Some(restrict) if *self.restricted_scope_counters.get(restrict).unwrap_or(&0) > 0 => continue,
 
-              _ => continue,
+              _ => {
+                let span = Span::new(start, loc);
+                // this deduplicates symbols if they have the same span
+                if symbols.last().map_or(false, |last| last.span == span) {
+                  continue;
+                }
+
+                symbols.push(Symbol::new(span, scope, &line[start.column - 1..loc.column - 1]));
+              }
             }
           }
         }
 
-        _ => (),
+        stack_op => eprintln!("unknown stack op {stack_op:?}"),
       };
     }
 
-    Ok(spans)
+    Ok(symbols)
   }
 }

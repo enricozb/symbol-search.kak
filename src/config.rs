@@ -31,6 +31,7 @@ impl Config {
       .iter()
       .find(|(_, config)| config.extensions.contains(extension))?;
 
+
     let syntax_reference = SYNTAX_SET.find_syntax_by_name(language)?;
 
     Some(Parser::new(

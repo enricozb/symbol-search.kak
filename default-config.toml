@@ -41,6 +41,7 @@ include = [
   "entity.name.function.tsx",
   "entity.name.constant.tsx",
   "meta.definition.property.tsx",
+  "variable.other.constant.tsx",
 ]
 exclude = [
   "entity.name.type.module.tsx",

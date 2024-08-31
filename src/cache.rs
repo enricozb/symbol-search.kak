@@ -50,7 +50,7 @@ impl Cache {
 
     Ok(Self {
       path: Some(path.clone()),
-      files: Arc::new(RwLock::new(serde_json::from_reader(file).context("from_reader")?)),
+      files: Arc::new(RwLock::new(serde_json::from_reader(file).context("failed to parse cache").warn())),
     })
   }
 

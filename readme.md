@@ -30,6 +30,8 @@ for the default configuration.
 
 ## TODO
 
+- [ ] keep subprocess alive if indexing is still happening after exit.
+  - not sure what to do if another process is opened while one is indexing.
 - [ ] `fzf` modes for searching specific symbol kinds
 - [ ] buffer symbol search (similar to sublime's non-indexed symbol search)
 - [ ] include parent scope(s) in symbols

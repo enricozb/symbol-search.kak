@@ -54,3 +54,18 @@ exclude = [
   "meta.type.annotation.tsx",
   "meta.type.parameters.tsx",
 ]
+
+[c]
+extensions = ["c", "h"]
+include = [
+  "entity.name.function.c",
+  "entity.name.macro.c",
+  "entity.name.struct.c",
+  "entity.name.enum.c",
+  "entity.name.module.c",
+  "entity.name.type.c",
+  "entity.name.trait.c",
+  "entity.name.impl.c",
+  "entity.name.constant.c",
+  "entity.name.constant.preprocessor.c",
+]

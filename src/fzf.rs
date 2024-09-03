@@ -37,6 +37,7 @@ pub enum SymbolKind {
   Macro,
   Global,
   Constant,
+  Define,
 
   Class,
   Struct,
@@ -148,6 +149,7 @@ impl SymbolKind {
       Self::Macro     => "\x1b[33m(macro) \x1b[0m",
       Self::Global    => "\x1b[33m(global)\x1b[0m",
       Self::Constant  => "\x1b[33m(const) \x1b[0m",
+      Self::Define    => "\x1b[33m(const) \x1b[0m",
 
       Self::Class     => "\x1b[36m(class) \x1b[0m",
       Self::Struct    => "\x1b[36m(struct)\x1b[0m",

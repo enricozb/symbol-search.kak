@@ -123,22 +123,23 @@ impl ScopeKinds {
       };
 
       match name {
-        "module"    => SymbolKind::Module,
-        "macro"     => SymbolKind::Macro,
-        "constant"  => SymbolKind::Constant,
+        "module"       => SymbolKind::Module,
+        "macro"        => SymbolKind::Macro,
+        "constant"     => SymbolKind::Constant,
+        "preprocessor" => SymbolKind::Define,
 
-        "class"     => SymbolKind::Class,
-        "struct"    => SymbolKind::Struct,
-        "enum"      => SymbolKind::Enum,
-        "union"     => SymbolKind::Union,
+        "class"        => SymbolKind::Class,
+        "struct"       => SymbolKind::Struct,
+        "enum"         => SymbolKind::Enum,
+        "union"        => SymbolKind::Union,
 
-        "alias"     => SymbolKind::Alias,
-        "interface" => SymbolKind::Interface,
-        "trait"     => SymbolKind::Trait,
-        "type"      => SymbolKind::Type,
+        "alias"        => SymbolKind::Alias,
+        "interface"    => SymbolKind::Interface,
+        "trait"        => SymbolKind::Trait,
+        "type"         => SymbolKind::Type,
 
-        "function"  => SymbolKind::Function,
-        "impl"      => SymbolKind::Impl,
+        "function"     => SymbolKind::Function,
+        "impl"         => SymbolKind::Impl,
 
         _ => SymbolKind::Unknown,
       }

@@ -69,3 +69,10 @@ include = [
   "entity.name.constant.c",
   "entity.name.constant.preprocessor.c",
 ]
+
+[haskell]
+extensions = ["hs"]
+include = [
+  "entity.name.constant.haskell",
+  "storage.type.haskell",
+]

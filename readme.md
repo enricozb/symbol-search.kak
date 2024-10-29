@@ -30,6 +30,7 @@ for the default configuration.
 
 ## TODO
 
+- [ ] order of symbols should be stable
 - [ ] keep subprocess alive if indexing is still happening after exit.
   - not sure what to do if another process is opened while one is indexing.
 - [ ] `fzf` modes for searching specific symbol kinds

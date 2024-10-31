@@ -1,128 +1,75 @@
-pub mod scope;
-
-use std::collections::{HashMap, HashSet};
+use std::{collections::HashSet, path::{Path, PathBuf}};
 
 use anyhow::Context;
-use syntect::parsing::{ParseState, Scope, ScopeStackOp, SyntaxReference};
+use streaming_iterator::StreamingIterator;
+use tree_sitter::{Parser as TreeSitterParser, QueryCursor};
 
-use crate::text::{Loc, Span};
-
-pub struct Symbol<'a> {
-  pub span: Span,
-  pub scope: Scope,
-  pub text: &'a str,
-}
-
-impl<'a> Symbol<'a> {
-  pub fn new(span: Span, scope: Scope, text: &'a str) -> Self {
-    Self { span, scope, text }
-  }
-}
+use crate::{
+  config::{Config, Language, LanguageConfig},
+  symbol::Symbol,
+  text::{Loc, Span},
+};
 
 pub struct Parser<'a> {
-  /// Scopes to search for, mapping to optional scope-level exclusions. See [`ScopeExpr`].
-  include: &'a HashMap<Scope, Option<Scope>>,
-  /// Symbols that restrict some scopes. See [`LanguageConfig`].
-  restrict: &'a HashSet<Scope>,
-  /// Scopes within which no symbols are returned.
-  exclude: &'a HashSet<Scope>,
-  /// The current (unordered) stack of restricted scopes and their counts (nesting depth).
-  /// Scopes that are popped resulting in a count of zero are not necessarily removed from the map.
-  restricted_scope_counters: HashMap<Scope, usize>,
-  /// The current number of excluded scopes in the scope stack. As excluded scopes are pushed / popped,
-  /// this number is incremented / decremented respectively. While this number is positive, no scopes
-  /// are returned.
-  excluded_scope_count: usize,
-  /// The current line, 0 before any line is parsed.
-  line: usize,
-  /// The current stack of scopes, and their starting positions.
-  stack: Vec<(Loc, Scope)>,
-  /// The syntect parser's internal state.
-  state: ParseState,
+  path: PathBuf,
+  language: Language,
+  language_config: &'a LanguageConfig,
 }
 
 impl<'a> Parser<'a> {
-  pub fn new(
-    include: &'a HashMap<Scope, Option<Scope>>,
-    restrict: &'a HashSet<Scope>,
-    exclude: &'a HashSet<Scope>,
-    syntax: &SyntaxReference,
-  ) -> Self {
-    Self {
-      include,
-      restrict,
-      exclude,
-      restricted_scope_counters: HashMap::new(),
-      excluded_scope_count: 0,
-      line: 0,
-      stack: Vec::new(),
-      state: ParseState::new(syntax),
-    }
+  pub fn from_path<P: AsRef<Path>>(config: &'a Config, path: P) -> Option<Self> {
+    let path = path.as_ref();
+    let extension = path.extension()?.to_str()?;
+    let language = Language::from_extension(extension)?;
+    let language_config = config.languages.get(&language)?;
+
+    Some(Self {
+      path: path.to_path_buf(),
+      language,
+      language_config,
+    })
   }
 
-  pub fn parse_line<'b>(&mut self, line: &'b str) -> Result<Vec<Symbol<'b>>, anyhow::Error> {
-    self.line += 1;
+  pub fn on_symbol(&self, callback: impl Fn(Symbol) -> Result<(), anyhow::Error>) -> Result<(), anyhow::Error> {
+    let mut parser = TreeSitterParser::new();
+    parser.set_language(&self.language.to_tree_sitter()).context("set_language")?;
 
-    let scope_ops = self.state.parse_line(line, &crate::config::SYNTAX_SET).context("parse_line")?;
+    let content = std::fs::read_to_string(&self.path).context("read")?;
 
-    let mut symbols: Vec<Symbol> = Vec::new();
+    let tree = parser.parse(content.as_bytes(), None).context("parse")?;
+    let mut positions = HashSet::new();
 
-    for (column, scope_op) in scope_ops {
-      let loc = Loc::new(self.line, column + 1);
+    for (kind, queries) in &self.language_config.symbol_queries {
 
-      match scope_op {
-        ScopeStackOp::Push(scope) => {
-          if self.restrict.contains(&scope) {
-            self.restricted_scope_counters.entry(scope).or_insert(1);
-          }
+      for query in queries {
+        let mut cursor = QueryCursor::new();
+        let mut matches = cursor.matches(query, tree.root_node(), content.as_bytes());
 
-          if self.exclude.contains(&scope) {
-            self.excluded_scope_count += 1;
-          }
+        while let Some(m) = matches.next() {
+          for capture in m.captures {
+            let node = capture.node;
+            let start_pos = node.start_position();
 
-          self.stack.push((loc, scope));
-        }
-
-        ScopeStackOp::Pop(n) => {
-          for _ in 0..n {
-            let (start, scope) = self.stack.pop().context("pop")?;
-
-            if self.restrict.contains(&scope) {
-              *self.restricted_scope_counters.get_mut(&scope).unwrap() -= 1;
-            }
-
-            if self.exclude.contains(&scope) {
-              self.excluded_scope_count -= 1;
-            }
-
-            if self.excluded_scope_count > 0 {
+            if positions.contains(&start_pos) {
               continue;
+            } else {
+              positions.insert(start_pos);
             }
 
-            let Some(restrict) = self.include.get(&scope) else {
-              continue;
-            };
+            let end_pos = node.start_position();
 
-            match restrict {
-              Some(restrict) if *self.restricted_scope_counters.get(restrict).unwrap_or(&0) > 0 => continue,
+            let start_byte = node.start_byte();
+            let end_byte = node.end_byte();
+            let text = &content[start_byte..end_byte];
 
-              _ => {
-                let span = Span::new(start, loc);
-                // this deduplicates symbols if they have the same span
-                if symbols.last().map_or(false, |last| last.span == span) {
-                  continue;
-                }
+            let span = Span::new(Loc::new(start_pos.row + 1, start_pos.column), Loc::new(end_pos.row + 1, end_pos.column));
 
-                symbols.push(Symbol::new(span, scope, &line[start.column - 1..loc.column - 1]));
-              }
-            }
+            callback(Symbol { span, text, kind: *kind }).context("callback")?;
           }
         }
-
-        _ => (),
-      };
+      }
     }
 
-    Ok(symbols)
+    Ok(())
   }
 }

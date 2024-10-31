@@ -80,7 +80,7 @@ impl Cache {
       .get_mut(path)
       .unwrap()
       .entries
-      .push(Entry::new((), entry.loc, entry.symbol.into(), entry.kind));
+      .push(Entry::new((), entry.loc, entry.text.into(), entry.kind));
   }
 
   /// Save a cache to its path.

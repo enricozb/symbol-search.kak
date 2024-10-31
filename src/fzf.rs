@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 const SPACE: char = '\u{2008}';
 
-use crate::{config::FzfSettings, text::Loc};
+use crate::{config::FzfSettings, symbol::Kind, text::Loc};
 
 pub struct Fzf {
   child: Child,
@@ -27,37 +27,13 @@ pub struct Sink {
 pub struct Entry<P, S> {
   pub path: P,
   pub loc: Loc,
-  pub symbol: S,
-  pub kind: SymbolKind,
-}
-
-#[derive(Clone, Copy, Serialize, Deserialize)]
-pub enum SymbolKind {
-  Module,
-  Macro,
-  Global,
-  Constant,
-  Define,
-
-  Class,
-  Struct,
-  Enum,
-  Union,
-
-  Alias,
-  Interface,
-  Trait,
-  Type,
-
-  Function,
-  Impl,
-
-  Unknown,
+  pub text: S,
+  pub kind: Kind,
 }
 
 impl Fzf {
   /// Spawns `fzf` process that expects stdin entries of the form
-  /// `<path> <line> <column> <symbol> <kind>` separated by [`SPACE`].
+  /// `<path> <line> <column> <text> <kind>` separated by [`SPACE`].
   pub fn new(settings: &FzfSettings) -> Result<Fzf, anyhow::Error> {
     let mut child = Command::new("fzf")
       .args([
@@ -116,13 +92,8 @@ impl Sink {
 }
 
 impl<P, S> Entry<P, S> {
-  pub fn new(path: P, loc: Loc, symbol: S, kind: SymbolKind) -> Self {
-    Self {
-      path,
-      loc,
-      symbol,
-      kind,
-    }
+  pub fn new(path: P, loc: Loc, text: S, kind: Kind) -> Self {
+    Self { path, loc, text, kind }
   }
 }
 
@@ -130,40 +101,12 @@ impl<P: AsRef<Path>, S: Display> Display for Entry<P, S> {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     write!(
       f,
-      "{path}{SPACE}{line}{SPACE}{column}{SPACE}{symbol}{SPACE}{kind}{SPACE}",
+      "{path}{SPACE}{line}{SPACE}{column}{SPACE}{text}{SPACE}{kind}{SPACE}",
       path = self.path.as_ref().to_string_lossy(),
       line = self.loc.line,
       column = self.loc.column,
-      symbol = self.symbol,
-      kind = self.kind.short(),
+      text = self.text,
+      kind = self.kind.colored_abbreviation(),
     )
-  }
-}
-
-impl SymbolKind {
-  #[rustfmt::skip]
-  pub fn short(self) -> &'static str {
-    // these strings must all have the same printable length
-    match self {
-      Self::Module    => "\x1b[33m(mod)   \x1b[0m",
-      Self::Macro     => "\x1b[33m(macro) \x1b[0m",
-      Self::Global    => "\x1b[33m(global)\x1b[0m",
-      Self::Constant  => "\x1b[33m(const) \x1b[0m",
-      Self::Define    => "\x1b[33m(const) \x1b[0m",
-
-      Self::Class     => "\x1b[36m(class) \x1b[0m",
-      Self::Struct    => "\x1b[36m(struct)\x1b[0m",
-      Self::Enum      => "\x1b[36m(enum)  \x1b[0m",
-      Self::Union     => "\x1b[36m(union) \x1b[0m",
-
-      Self::Alias     => "\x1b[34m(alias) \x1b[0m",
-      Self::Interface => "\x1b[34m(inter) \x1b[0m",
-      Self::Trait     => "\x1b[34m(trait) \x1b[0m",
-      Self::Type      => "\x1b[34m(type)  \x1b[0m",
-
-      Self::Function  => "\x1b[35m(func)  \x1b[0m",
-      Self::Impl      => "\x1b[35m(impl)  \x1b[0m",
-
-      Self::Unknown   => "\x1b[31m(??????)\x1b[0m",    }
   }
 }

@@ -2,77 +2,54 @@
 preview_window = "70%"
 
 [rust]
-extensions = ["rs"]
-include = [
-  "entity.name.function.rust",
-  "entity.name.macro.rust",
-  "entity.name.struct.rust",
-  "entity.name.enum.rust",
-  "entity.name.module.rust",
-  "entity.name.type.rust",
-  "entity.name.trait.rust",
-  "entity.name.impl.rust",
-  "entity.name.constant.rust",
-]
+enum     = "(enum_item name: (type_identifier) @name)"
+struct   = "(struct_item name: (type_identifier) @name)"
+method   = "(declaration_list (function_item name: (identifier) @name))"
+function = "(function_item name: (identifier) @name)"
+# const  = "entity.name.constant.rust"
+impl     = "(impl_item type: (type_identifier) @name)"
+macro    = "(macro_definition name: (identifier) @name)"
+module   = "(mod_item name: (identifier) @name)"
+trait    = "(trait_item name: (type_identifier) @name)"
+type     = "(type_item name: (type_identifier) @name)"
 
 [python]
-extensions = ["py"]
-include = [
-  "entity.name.class.python",
-  "entity.name.function.python",
-]
+function = "(function_definition name: (identifier) @name)"
+class = "(class_definition name: (identifier) @name)"
 
 [go]
-extensions = ["go"]
-include = [
-  "entity.name.function.go",
-  "entity.name.type.go",
-
-  "variable.other.constant.declaration.go - meta.block.go",
-  "variable.other.readwrite.declaration.go - meta.block.go",
-]
+# function = [
+#   "entity.name.function.go"
+#   "variable.other.readwrite.declaration.go - meta.block.go"
+# ]
+# type = "entity.name.type.go"
+# const = "variable.other.constant.declaration.go - meta.block.go"
 
 [typescript]
-extensions = ["js", "jsx", "ts", "tsx"]
-include = [
-  "entity.name.type.class.tsx",
-  "entity.name.type.alias.tsx",
-  "entity.name.type.interface.tsx",
-  "entity.name.function.tsx",
-  "entity.name.constant.tsx",
-  "meta.definition.property.tsx",
-  "variable.other.constant.tsx",
-]
-exclude = [
-  "entity.name.type.module.tsx",
-  "entity.name.type.tsx",
-  "meta.block.tsx",
-  "meta.function-call.tsx",
-  "meta.import.tsx",
-  "meta.parameters.tsx",
-  "meta.return.type.tsx",
-  "meta.type.annotation.tsx",
-  "meta.type.parameters.tsx",
+class = "(class_declaration name: (type_identifier) @name)"
+method = "(method_signature name: (property_identifier) @name)"
+function = [
+  "(function_declaration name: (identifier))",
+  "(program (lexical_declaration (variable_declarator name: (identifier) @name value: (arrow_function))))",
 ]
 
 [c]
-extensions = ["c", "h"]
-include = [
-  "entity.name.function.c",
-  "entity.name.macro.c",
-  "entity.name.struct.c",
-  "entity.name.enum.c",
-  "entity.name.module.c",
-  "entity.name.type.c",
-  "entity.name.trait.c",
-  "entity.name.impl.c",
-  "entity.name.constant.c",
-  "entity.name.constant.preprocessor.c",
-]
+# include = [
+#   "entity.name.function.c"
+#   "entity.name.macro.c"
+#   "entity.name.struct.c"
+#   "entity.name.enum.c"
+#   "entity.name.module.c"
+#   "entity.name.type.c"
+#   "entity.name.trait.c"
+#   "entity.name.impl.c"
+#   "entity.name.constant.c"
+#   "entity.name.constant.preprocessor.c"
+# ]
 
 [haskell]
-extensions = ["hs"]
-include = [
-  "entity.name.constant.haskell",
-  "storage.type.haskell",
+type = [
+  "(type_synomym name: (name) @name)",
+  "(data_type name: (name) @name)",
 ]
+function = "(haskell declarations: (declarations (signature name: (variable) @function.name)))"

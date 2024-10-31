@@ -62,7 +62,7 @@ impl<'a> Parser<'a> {
             let end_byte = node.end_byte();
             let text = &content[start_byte..end_byte];
 
-            let span = Span::new(Loc::new(start_pos.row + 1, start_pos.column), Loc::new(end_pos.row + 1, end_pos.column));
+            let span = Span::new(Loc::new(start_pos.row + 1, start_pos.column + 1), Loc::new(end_pos.row + 1, end_pos.column + 1));
 
             callback(Symbol { span, text, kind: *kind }).context("callback")?;
           }

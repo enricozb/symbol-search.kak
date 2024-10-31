@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::{collections::HashSet, path::{Path, PathBuf}};
 
 use anyhow::Context;
 use streaming_iterator::StreamingIterator;
@@ -37,16 +37,25 @@ impl<'a> Parser<'a> {
     let content = std::fs::read_to_string(&self.path).context("read")?;
 
     let tree = parser.parse(content.as_bytes(), None).context("parse")?;
+    let mut positions = HashSet::new();
 
     for (kind, queries) in &self.language_config.symbol_queries {
+
       for query in queries {
         let mut cursor = QueryCursor::new();
-        let mut matches = cursor.matches(&query, tree.root_node(), content.as_bytes());
+        let mut matches = cursor.matches(query, tree.root_node(), content.as_bytes());
 
         while let Some(m) = matches.next() {
           for capture in m.captures {
             let node = capture.node;
             let start_pos = node.start_position();
+
+            if positions.contains(&start_pos) {
+              continue;
+            } else {
+              positions.insert(start_pos);
+            }
+
             let end_pos = node.start_position();
 
             let start_byte = node.start_byte();

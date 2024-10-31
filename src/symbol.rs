@@ -8,7 +8,7 @@ pub struct Symbol<'a> {
   pub kind: Kind,
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum Kind {
   Module,
@@ -28,6 +28,7 @@ pub enum Kind {
   Type,
 
   Function,
+  Method,
   Impl,
 
   Unknown,
@@ -55,6 +56,7 @@ impl Kind {
       Self::Type      => "\x1b[34m(type)  \x1b[0m",
 
       Self::Function  => "\x1b[35m(func)  \x1b[0m",
+      Self::Method    => "\x1b[35m(method)\x1b[0m",
       Self::Impl      => "\x1b[35m(impl)  \x1b[0m",
 
       Self::Unknown   => "\x1b[31m(??????)\x1b[0m",    }

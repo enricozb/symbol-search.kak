@@ -1,9 +1,9 @@
-use std::{collections::HashMap, path::Path, str::FromStr};
+use std::{collections::HashMap, str::FromStr};
 
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Deserializer};
 use tree_sitter::{Language as TreeSitterLanguage, Query};
 
-use crate::{parser::Parser, symbol::Kind, utils::OneOrMany};
+use crate::{symbol::Kind, utils::OneOrMany};
 
 static DEFAULT_CONFIG: &str = include_str!("../default-config.toml");
 
@@ -16,7 +16,7 @@ pub struct Config {
   pub fzf_settings: FzfSettings,
 }
 
-#[derive(Clone, Copy, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum Language {
   C,
@@ -36,7 +36,7 @@ pub struct LanguageConfig {
 
 impl Config {
   pub fn extensions(&self) -> impl Iterator<Item = &'static str> + '_ {
-    self.languages.keys().flat_map(|l| l.extensions().into_iter().map(|ext| *ext))
+    self.languages.keys().flat_map(Language::extensions).copied()
   }
 }
 
@@ -84,7 +84,7 @@ impl FromStr for Language {
       "hs" => Ok(Self::Haskell),
       "py" => Ok(Self::Python),
       "rs" => Ok(Self::Rust),
-      "js" | "jsx" | "ts" | "tsx" => Ok(Self::Rust),
+      "js" | "jsx" | "ts" | "tsx" => Ok(Self::TypeScript),
       _ => Err(()),
     }
   }

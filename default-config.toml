@@ -14,8 +14,8 @@ trait    = "(trait_item name: (type_identifier) @name)"
 type     = "(type_item name: (type_identifier) @name)"
 
 [python]
-# function = "entity.name.function.python"
-# class = "entity.name.class.python"
+function = "(function_definition name: (identifier) @name)"
+class = "(class_definition name: (identifier) @name)"
 
 [go]
 # function = [

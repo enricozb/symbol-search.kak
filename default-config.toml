@@ -34,18 +34,13 @@ function = [
 ]
 
 [c]
-# include = [
-#   "entity.name.function.c"
-#   "entity.name.macro.c"
-#   "entity.name.struct.c"
-#   "entity.name.enum.c"
-#   "entity.name.module.c"
-#   "entity.name.type.c"
-#   "entity.name.trait.c"
-#   "entity.name.impl.c"
-#   "entity.name.constant.c"
-#   "entity.name.constant.preprocessor.c"
-# ]
+struct = "(struct_specifier name: (type_identifier) @name)"
+type = [
+  "(declaration type: (union_specifier name: (type_identifier) @name))",
+  "(type_definition declarator: (type_identifier) @name)"
+]
+function = "(function_declarator declarator: (identifier) @name)"
+enum = "(enum_specifier name: (type_identifier) @name)"
 
 [haskell]
 type = [

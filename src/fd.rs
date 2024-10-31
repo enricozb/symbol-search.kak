@@ -17,11 +17,8 @@ pub struct Fd {
 
 impl Fd {
   /// Spawns an fd process finding all files with the provided `extensions`.
-  pub fn new<'a>(extensions: impl IntoIterator<Item = &'a String>) -> Result<Self, anyhow::Error> {
-    let extension_args: Vec<&str> = extensions
-      .into_iter()
-      .flat_map(|ext| vec!["-e", ext.as_str()])
-      .collect();
+  pub fn new<'a>(extensions: impl IntoIterator<Item = &'a str>) -> Result<Self, anyhow::Error> {
+    let extension_args: Vec<&str> = extensions.into_iter().flat_map(|ext| vec!["-e", ext]).collect();
 
     let mut child = Command::new("fd")
       .args(["-t", "f", "-0"])

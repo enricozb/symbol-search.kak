@@ -4,6 +4,7 @@ mod ext;
 mod fd;
 mod fzf;
 mod parser;
+mod symbol;
 mod text;
 mod utils;
 mod worker;
@@ -61,14 +62,16 @@ impl Args {
 fn main() -> Result<(), anyhow::Error> {
   let args = Args::parse();
 
-  let config = args.config().context("config")?;
+  let config = Box::new(args.config().context("config")?);
+  let config: &'static Config = Box::leak(config);
+
   let cache = args.cache().context("cache")?;
 
   let fzf = Fzf::new(&config.fzf_settings).context("fzf")?;
   let fd = Fd::new(config.extensions()).context("fd")?;
 
   for _ in 0..crate::utils::num_threads() {
-    Worker::new(&config, &cache, fd.files(), &fzf).run();
+    Worker::new(config, &cache, fd.files(), &fzf).run();
   }
 
   // the cache is saved on drop

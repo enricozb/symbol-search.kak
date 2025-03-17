@@ -13,6 +13,12 @@ module   = "(mod_item name: (identifier) @name)"
 trait    = "(trait_item name: (type_identifier) @name)"
 type     = "(type_item name: (type_identifier) @name)"
 
+[odin]
+struct   = "(struct_declaration (identifier) @name \"::\")"
+method   = "(procedure_declaration (identifier) @name)"
+type     = "(const_declaration (identifier) @name)"
+module   = " (import_declaration alias: (identifier) @name ) "
+
 [python]
 function = "(function_definition name: (identifier) @name)"
 class = "(class_definition name: (identifier) @name)"

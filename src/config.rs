@@ -20,6 +20,7 @@ pub struct Config {
 #[serde(rename_all = "lowercase")]
 pub enum Language {
   C,
+  Cpp,
   Go,
   Odin,
   Haskell,
@@ -51,6 +52,7 @@ impl Language {
   pub fn extensions(&self) -> &'static [&'static str] {
     match self {
       Self::C => &["c", "h"],
+      Self::Cpp => &["cpp", "cc", "hh"],
       Self::Go => &["go"],
       Self::Odin => &["odin"],
       Self::Haskell => &["hs"],
@@ -63,6 +65,7 @@ impl Language {
   pub fn to_tree_sitter(&self) -> TreeSitterLanguage {
     match self {
       Self::C => tree_sitter_c::LANGUAGE.into(),
+      Self::Cpp => tree_sitter_cpp::LANGUAGE.into(),
       Self::Go => tree_sitter_go::LANGUAGE.into(),
       Self::Haskell => tree_sitter_haskell::LANGUAGE.into(),
       Self::Odin => tree_sitter_odin::LANGUAGE.into(),
@@ -83,6 +86,7 @@ impl FromStr for Language {
   fn from_str(s: &str) -> Result<Self, Self::Err> {
     match s {
       "c" | "h" => Ok(Self::C),
+      "cpp" | "cc" | "hh" => Ok(Self::Cpp),
       "go" => Ok(Self::Go),
       "odin" => Ok(Self::Odin),
       "hs" => Ok(Self::Haskell),

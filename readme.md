@@ -7,8 +7,7 @@ Search symbols across various languages among files in your current working dire
 
 ![demo.gif][1]
 
-Symbols are extracted using [syntect][2] which parses source code using Sublime Text
-syntax files.
+Symbols are extracted using [tree-sitter][2].
 
 ## Installation
 
@@ -22,6 +21,8 @@ Two things can be configured: `fzf`'s appearance, and the list of symbols that a
 for each language. Configuration is done through a [TOML][6] string. Set `symbol_search_config`
 kakoune option to your configuration. See [`symbol-search.kak`][7] or [`default-config.toml`][8]
 for the default configuration.
+
+Queries are written using tree-sitter's query language.
 
 ## Requirements
 
@@ -37,9 +38,10 @@ for the default configuration.
 - [ ] buffer symbol search (similar to sublime's non-indexed symbol search)
 - [ ] include parent scope(s) in symbols
   - a `method` under `impl Trait for X` should appear as `<X as Trait>::method`
+  - this can likely be done with tree-sitter's captures `@trait` and transforms
 
 [1]: demo.gif
-[2]: https://github.com/trishume/syntect
+[2]: https://github.com/tree-sitter/tree-sitter
 [3]: #requirements
 [4]: https://crates.io/crates/kak-symbol-search
 [5]: ./rc/symbol-search.kak

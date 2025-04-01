@@ -26,6 +26,4 @@ tree-sitter-haskell = "0.23"
 tree-sitter-python = "0.23"
 tree-sitter-rust = "0.23"
 tree-sitter-typescript = "0.23"
-
-[build-dependencies]
-syntect = "5.2.0"
+tree-sitter-cpp = "0.23.4"

@@ -2,7 +2,7 @@
 
 pkgs.rustPlatform.buildRustPackage rec {
   pname = "kak-symbol-search";
-  version = "0.5.1";
+  version = "0.5.2";
   src = ./.;
 
   cargoLock = { lockFile = ./Cargo.lock; };

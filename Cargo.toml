@@ -2,7 +2,7 @@
 name = "kak-symbol-search"
 description = "kakoune symbol search"
 readme = "readme.md"
-version = "0.5.1"
+version = "0.5.2"
 edition = "2021"
 license = "CC0-1.0"
 repository = "https://github.com/enricozb/symbol-search.kak"

@@ -37,6 +37,7 @@ method = "(method_signature name: (property_identifier) @name)"
 function = [
   "(function_declaration name: (identifier))",
   "(program (lexical_declaration (variable_declarator name: (identifier) @name value: (arrow_function))))",
+  "(program (export_statement (lexical_declaration (variable_declarator name: (identifier) @name value: (arrow_function)))))",
 ]
 
 [c]

@@ -1,7 +1,10 @@
 # symbol-search.kak
 
 > [!NOTE]
-> This plugin is still undergoing development, but is usable.
+> Development of this iteration of the plugin has stopped. I moved the core
+> functionality to another crate: [cymbal](https://github.com/enricozb/cymbal).
+> I then call `cymbal` and pipe its output to fzf, similar to the script that
+> is in cymbal's readme.
 
 Search symbols across various languages among files in your current working directory.
 
